@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -19,7 +21,21 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  void _incrementCounter() => setState(() => _counter++);
+  void _incrementCounter() {
+    _tester();
+    setState(() => _counter++);
+  }
+
+  void _tester() {
+    try {
+      throw 'a';
+    } catch (e) {
+      print("if you see me, pause should've triggered");
+      debugger(when: true);
+      // print('if you uncomment me, the this is where we get paused');
+    }
+    print('but the debugger pauses here !?!');
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
