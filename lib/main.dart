@@ -32,7 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       print("if you see me, pause should've triggered");
       debugger(when: true);
-      // print('if you uncomment me, the this is where we get paused');
+      print('if you uncomment me, the this is where we get paused');
     }
     print('but the debugger pauses here !?!');
   }
