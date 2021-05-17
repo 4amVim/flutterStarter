@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -8,7 +9,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(primarySwatch: Colors.blue, brightness: Brightness.dark),
       home: MyHomePage());
 }
 
@@ -21,6 +22,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   String text = 'Go on do it!';
+  String text1 = 'Go on do it!';
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text('Hi')),
@@ -40,10 +42,27 @@ class _MyHomePageState extends State<MyHomePage> {
                     });
                   },
                   child: SizedBox(
-                    height: 200,
-                    child: Container(color: Colors.blue),
-                  )),
-              Text(text)
+                      height: 200, child: Container(color: Colors.blue))),
+              Text(text),
+              Listener(
+                behavior: HitTestBehavior.opaque,
+                onPointerMove: (details) {
+                  var dx = details.localPosition.dx.toStringAsFixed(2);
+                  var dy = details.localPosition.dy.toStringAsFixed(2);
+                  setState(() {
+                    text1 = 'dx:$dx, dy:$dy';
+                  });
+                },
+                child: SizedBox(
+                    height: 150,
+                    child: CustomPaint(
+                      painter: Sky(),
+                      child: Container(
+                          // color: Color(0x3F3BF4BB),
+                          ),
+                    )),
+              ),
+              Text(text1)
             ])),
         floatingActionButton: FloatingActionButton(
           onPressed: () => setState(() => _counter++),
@@ -52,3 +71,37 @@ class _MyHomePageState extends State<MyHomePage> {
         ), // This trailing comma makes auto-formatting nicer for build methods.
       );
 }
+
+class Sky extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    Rect rect = Offset.zero & Size(size.width, 1);
+    // canvas.save();
+    // canvas.clipRRect(RRect.fromRectXY(rect, 100.0, 100.0));
+    // canvas.saveLayer(rect, Paint());
+    // canvas.drawPaint(Paint()..color = Colors.red);
+    // canvas.drawPaint(Paint()..color = Colors.white);
+    // canvas.restore();
+    // canvas.restore();
+    canvas
+      ..translate(0, size.height / 2)
+      ..drawRect(rect, Paint()..color = Colors.white);
+
+    Rect tens = Offset.fromDirection(0, 100) & Size(2.56, 50);
+    Rect units = Offset.fromDirection(0, 200) & Size(1.6, 31.25);
+
+    var pinky = Paint()..color = Color(0xFFFFB7FF);
+
+    canvas
+      ..translate(0, -50)
+      ..drawRect(tens, pinky)
+      ..drawRect(units, pinky)
+      ..translate(0, 50);
+  }
+
+  @override
+  bool shouldRepaint(Sky oldDelegate) => false;
+  @override
+  bool shouldRebuildSemantics(Sky oldDelegate) => false;
+}
+
