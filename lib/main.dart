@@ -20,23 +20,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-
-  void _incrementCounter() {
-    _tester();
-    setState(() => _counter++);
-  }
-
-  void _tester() {
-    try {
-      throw 'a';
-    } catch (e) {
-      print("if you see me, pause should've triggered");
-      debugger(when: true);
-      print('if you uncomment me, the this is where we get paused');
-    }
-    print('but the debugger pauses here !?!');
-  }
-
+  String text = 'Go on do it!';
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text('Hi')),
@@ -46,9 +30,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: <Widget>[
               Text('You have pushed the button this many times:'),
               Text('$_counter', style: Theme.of(context).textTheme.headline4),
+              Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerMove: (details) {
+                    var dx = details.localPosition.dx.toStringAsFixed(2);
+                    var dy = details.localPosition.dy.toStringAsFixed(2);
+                    setState(() {
+                      text = 'dx:$dx, dy:$dy';
+                    });
+                  },
+                  child: SizedBox(
+                    height: 200,
+                    child: Container(color: Colors.blue),
+                  )),
+              Text(text)
             ])),
         floatingActionButton: FloatingActionButton(
-          onPressed: _incrementCounter,
+          onPressed: () => setState(() => _counter++),
           tooltip: 'Increment',
           child: Icon(Icons.add),
         ), // This trailing comma makes auto-formatting nicer for build methods.
