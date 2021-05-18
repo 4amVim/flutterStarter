@@ -23,6 +23,10 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   String text = 'Go on do it!';
   String text1 = 'Go on do it!';
+  double offset = 0;
+
+  late Offset initialX;
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text('Hi')),
@@ -46,17 +50,23 @@ class _MyHomePageState extends State<MyHomePage> {
               Text(text),
               Listener(
                 behavior: HitTestBehavior.opaque,
+                onPointerDown: (details) {
+                  initialX = details.localPosition;
+                  print(initialX);
+                },
                 onPointerMove: (details) {
                   var dx = details.localPosition.dx.toStringAsFixed(2);
                   var dy = details.localPosition.dy.toStringAsFixed(2);
                   setState(() {
-                    text1 = 'dx:$dx, dy:$dy';
+                    var poka = details.localPosition - initialX;
+                    offset = poka.dx; //double.parse(dx);
+                    text1 = '$initialX' 'poka.dx:${poka.dx}';
                   });
                 },
                 child: SizedBox(
                     height: 150,
                     child: CustomPaint(
-                      painter: Sky(),
+                      painter: Ticker(offset),
                       child: Container(
                           // color: Color(0x3F3BF4BB),
                           ),
@@ -72,36 +82,40 @@ class _MyHomePageState extends State<MyHomePage> {
       );
 }
 
-class Sky extends CustomPainter {
+class Ticker extends CustomPainter {
+  var offset;
+  Ticker(this.offset);
   @override
   void paint(Canvas canvas, Size size) {
     Rect rect = Offset.zero & Size(size.width, 1);
-    // canvas.save();
-    // canvas.clipRRect(RRect.fromRectXY(rect, 100.0, 100.0));
-    // canvas.saveLayer(rect, Paint());
-    // canvas.drawPaint(Paint()..color = Colors.red);
-    // canvas.drawPaint(Paint()..color = Colors.white);
-    // canvas.restore();
-    // canvas.restore();
+    var xAxis = size.height / 2;
     canvas
-      ..translate(0, size.height / 2)
+      ..translate(0, xAxis)
       ..drawRect(rect, Paint()..color = Colors.white);
 
-    Rect tens = Offset.fromDirection(0, 100) & Size(2.56, 50);
-    Rect units = Offset.fromDirection(0, 200) & Size(1.6, 31.25);
+    Rect tens(double xOffset) => Offset(xOffset, -25) & Size(2.56, 50);
+    Rect unit(double xOffset) => Offset(xOffset, -10) & Size(1.6, 20);
 
     var pinky = Paint()..color = Color(0xFFFFB7FF);
 
+    canvas.translate(offset, 0);
     canvas
-      ..translate(0, -50)
-      ..drawRect(tens, pinky)
-      ..drawRect(units, pinky)
-      ..translate(0, 50);
+      ..drawRect(tens(100), pinky)
+      ..drawRect(unit(110), pinky)
+      ..drawRect(unit(120), pinky)
+      ..drawRect(unit(130), pinky)
+      ..drawRect(unit(140), pinky)
+      ..drawRect(unit(150), pinky)
+      ..drawRect(unit(160), pinky)
+      ..drawRect(unit(170), pinky)
+      ..drawRect(unit(180), pinky)
+      ..drawRect(unit(190), pinky)
+      ..drawRect(tens(200), pinky);
   }
 
   @override
-  bool shouldRepaint(Sky oldDelegate) => false;
-  @override
-  bool shouldRebuildSemantics(Sky oldDelegate) => false;
+  bool shouldRepaint(Ticker oldDelegate) {
+    print('repaint');
+    return oldDelegate.offset - offset > 1;
+  }
 }
-
