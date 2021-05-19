@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -24,6 +25,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String text = 'Go on do it!';
   String text1 = 'Go on do it!';
   double offset = 0;
+  late double start;
 
   late Offset initialX;
 
@@ -51,6 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Listener(
                 behavior: HitTestBehavior.opaque,
                 onPointerDown: (details) {
+                  start = offset;
                   initialX = details.localPosition;
                   print(initialX);
                 },
@@ -83,39 +86,67 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class Ticker extends CustomPainter {
-  var offset;
+  double _start = 0;
+  double offset;
+
   Ticker(this.offset);
   @override
   void paint(Canvas canvas, Size size) {
     Rect rect = Offset.zero & Size(size.width, 1);
     var xAxis = size.height / 2;
     canvas
-      ..translate(0, xAxis)
-      ..drawRect(rect, Paint()..color = Colors.white);
+          ..drawRect(Offset.zero & size, Paint()..color = Color(0xFFFFCA28))
+          ..translate(0, xAxis)
+        // ..drawRect(rect, Paint()..color = Colors.white)
+        ;
 
     Rect tens(double xOffset) => Offset(xOffset, -25) & Size(2.56, 50);
     Rect unit(double xOffset) => Offset(xOffset, -10) & Size(1.6, 20);
 
-    var pinky = Paint()..color = Color(0xFFFFB7FF);
+    var black = Paint()..color = Colors.black;
+    // canvas.drawPaint(Paint()..color = Colors.blue);
 
-    canvas.translate(offset, 0);
+    canvas.translate(_start + offset, 0);
     canvas
-      ..drawRect(tens(100), pinky)
-      ..drawRect(unit(110), pinky)
-      ..drawRect(unit(120), pinky)
-      ..drawRect(unit(130), pinky)
-      ..drawRect(unit(140), pinky)
-      ..drawRect(unit(150), pinky)
-      ..drawRect(unit(160), pinky)
-      ..drawRect(unit(170), pinky)
-      ..drawRect(unit(180), pinky)
-      ..drawRect(unit(190), pinky)
-      ..drawRect(tens(200), pinky);
+      ..drawRect(tens(00), black)
+      ..drawRect(unit(10), black)
+      ..drawRect(unit(20), black)
+      ..drawRect(unit(30), black)
+      ..drawRect(unit(40), black)
+      ..drawRect(unit(50), black)
+      ..drawRect(unit(60), black)
+      ..drawRect(unit(70), black)
+      ..drawRect(unit(80), black)
+      ..drawRect(unit(90), black)
+      ..drawRect(tens(100), black);
+
+    Canvas drawRect(cvs, double no) => canvas
+      ..drawRect(tens(00 + no), black)
+      ..drawRect(unit(10 + no), black)
+      ..drawRect(unit(20 + no), black)
+      ..drawRect(unit(30 + no), black)
+      ..drawRect(unit(40 + no), black)
+      ..drawRect(unit(50 + no), black)
+      ..drawRect(unit(60 + no), black)
+      ..drawRect(unit(70 + no), black)
+      ..drawRect(unit(80 + no), black)
+      ..drawRect(unit(90 + no), black)
+      ..drawRect(tens(no), black);
+
+    drawRect(canvas, 100);
+    drawRect(canvas, 200);
+    drawRect(canvas, 300);
+    drawRect(canvas, 400);
   }
 
   @override
   bool shouldRepaint(Ticker oldDelegate) {
-    print('repaint');
-    return oldDelegate.offset - offset > 1;
+    if ((oldDelegate._start - offset).abs() > 10) {
+      
+      print('repaint' + (oldDelegate.offset - offset).toString());
+      return true;
+    }
+    print((oldDelegate.offset - offset).toStringAsFixed(1) + 'Wont ');
+    return false;
   }
 }

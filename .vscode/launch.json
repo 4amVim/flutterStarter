@@ -7,8 +7,8 @@
     {
       "name": "flutterStarter",
       "request": "launch",
-      "type": "dart",
-      "args": ["-v"]
+      "type": "dart"
+      // "args": ["-v"]
     }
   ]
 }
