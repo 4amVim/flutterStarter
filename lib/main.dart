@@ -1,7 +1,3 @@
-import 'dart:developer';
-import 'dart:math';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -25,7 +21,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String text = 'Go on do it!';
   String text1 = 'Go on do it!';
   double offset = 0;
-  late double start;
+  double nextTime = 0;
 
   late Offset initialX;
 
@@ -51,30 +47,28 @@ class _MyHomePageState extends State<MyHomePage> {
                       height: 200, child: Container(color: Colors.blue))),
               Text(text),
               Listener(
-                behavior: HitTestBehavior.opaque,
-                onPointerDown: (details) {
-                  start = offset;
-                  initialX = details.localPosition;
-                  print(initialX);
-                },
-                onPointerMove: (details) {
-                  var dx = details.localPosition.dx.toStringAsFixed(2);
-                  var dy = details.localPosition.dy.toStringAsFixed(2);
-                  setState(() {
-                    var poka = details.localPosition - initialX;
-                    offset = poka.dx; //double.parse(dx);
-                    text1 = '$initialX' 'poka.dx:${poka.dx}';
-                  });
-                },
-                child: SizedBox(
-                    height: 150,
-                    child: CustomPaint(
-                      painter: Ticker(offset),
-                      child: Container(
-                          // color: Color(0x3F3BF4BB),
-                          ),
-                    )),
-              ),
+                  behavior: HitTestBehavior.opaque,
+                  onPointerDown: (details) {
+                    initialX = details.localPosition;
+                    print(initialX);
+                  },
+                  onPointerMove: (details) {
+                    var dx = details.localPosition.dx.toStringAsFixed(2);
+                    var dy = details.localPosition.dy.toStringAsFixed(2);
+                    setState(() {
+                      var poka = details.localPosition - initialX;
+                      offset = poka.dx; //double.parse(dx);
+                      text1 = '$initialX' 'poka.dx:${poka.dx}';
+                    });
+                  },
+                  onPointerUp: (_) {
+                    nextTime = Ticker.zeTick!.offset;
+                  },
+                  child: SizedBox(
+                      height: 150,
+                      child: CustomPaint(
+                          painter: Ticker.offset(offset, nextTime),
+                          child: Container()))),
               Text(text1)
             ])),
         floatingActionButton: FloatingActionButton(
@@ -85,68 +79,64 @@ class _MyHomePageState extends State<MyHomePage> {
       );
 }
 
+/// What we do is, to build a Ticker given a start position,
 class Ticker extends CustomPainter {
-  double _start = 0;
   double offset;
 
-  Ticker(this.offset);
+  static Ticker? zeTick;
+  double zeroPosition;
+
+  Ticker(this.offset, this.zeroPosition);
+
+  factory Ticker.offset(offset, start) {
+    if (zeTick == null) {
+      print('pokoka');
+      zeTick = Ticker(offset, 50); //zeTick!.offset + offset);
+    } else {
+      zeTick = Ticker(offset,
+          zeTick!.offset + zeTick!.zeroPosition); //zeTick!.offset + offset);
+    }
+    return zeTick!;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
-    Rect rect = Offset.zero & Size(size.width, 1);
     var xAxis = size.height / 2;
     canvas
-          ..drawRect(Offset.zero & size, Paint()..color = Color(0xFFFFCA28))
-          ..translate(0, xAxis)
-        // ..drawRect(rect, Paint()..color = Colors.white)
-        ;
+      // ..translate(zeroPosition, 0)
+      ..drawRect(Offset.zero & size, Paint()..color = Color(0xFFFFCA28))
+      ..translate(0, xAxis);
+    canvas.translate(offset, 0);
+    canvas.translate(zeroPosition, 0);
+    print('current offset' + (offset + zeroPosition).toString());
 
-    Rect tens(double xOffset) => Offset(xOffset, -25) & Size(2.56, 50);
-    Rect unit(double xOffset) => Offset(xOffset, -10) & Size(1.6, 20);
+    ///Add [howMany] number of segments to the tape
+    Canvas _addSegments(Canvas cvs, int howMany) {
+      Rect tensLine(double xOffset) => Offset(xOffset, -25) & Size(2.56, 50);
+      Rect unitLine(double xOffset) => Offset(xOffset, -10) & Size(1.6, 20);
+      var black = Paint()..color = Colors.black;
+      //* Draw segments
+      for (var no = 0; no < howMany; no++) {
+        //* Draw a segment
+        cvs.drawRect(tensLine(no * 100), black);
+        for (var i = 1; i < 10; i++) {
+          cvs.drawRect(unitLine(i * 10 + no * 100), black);
+        }
+        cvs.drawRect(tensLine((no + 1) * 100), black);
+      }
+      return cvs;
+    }
 
-    var black = Paint()..color = Colors.black;
-    // canvas.drawPaint(Paint()..color = Colors.blue);
-
-    canvas.translate(_start + offset, 0);
-    canvas
-      ..drawRect(tens(00), black)
-      ..drawRect(unit(10), black)
-      ..drawRect(unit(20), black)
-      ..drawRect(unit(30), black)
-      ..drawRect(unit(40), black)
-      ..drawRect(unit(50), black)
-      ..drawRect(unit(60), black)
-      ..drawRect(unit(70), black)
-      ..drawRect(unit(80), black)
-      ..drawRect(unit(90), black)
-      ..drawRect(tens(100), black);
-
-    Canvas drawRect(cvs, double no) => canvas
-      ..drawRect(tens(00 + no), black)
-      ..drawRect(unit(10 + no), black)
-      ..drawRect(unit(20 + no), black)
-      ..drawRect(unit(30 + no), black)
-      ..drawRect(unit(40 + no), black)
-      ..drawRect(unit(50 + no), black)
-      ..drawRect(unit(60 + no), black)
-      ..drawRect(unit(70 + no), black)
-      ..drawRect(unit(80 + no), black)
-      ..drawRect(unit(90 + no), black)
-      ..drawRect(tens(no), black);
-
-    drawRect(canvas, 100);
-    drawRect(canvas, 200);
-    drawRect(canvas, 300);
-    drawRect(canvas, 400);
+    _addSegments(canvas, 9);
   }
 
   @override
   bool shouldRepaint(Ticker oldDelegate) {
-    if ((oldDelegate._start - offset).abs() > 10) {
-      
-      print('repaint' + (oldDelegate.offset - offset).toString());
-      return true;
-    }
-    print((oldDelegate.offset - offset).toStringAsFixed(1) + 'Wont ');
+    // if (offset > 10) {
+    //   print('repaint' + (oldDelegate.offset - offset).toString());
+    //   return true;
+    // }
+    // print((oldDelegate.offset - offset).toStringAsFixed(1) + 'Wont ');
     return false;
   }
 }
