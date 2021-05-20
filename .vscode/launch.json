@@ -5,9 +5,16 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "flutterStarter",
+      "name": "debug",
       "request": "launch",
       "type": "dart"
+      // "args": ["-v"]
+    },
+    {
+      "name": "profile",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
       // "args": ["-v"]
     }
   ]

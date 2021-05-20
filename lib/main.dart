@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -16,34 +18,35 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class Ticker1 extends CustomPainter {
-  static double currentOffset = 0;
-  static double currentStart = 0;
-  // static Ticker1? zeTick;
-
-  Ticker1();
+class TapeMeasure extends CustomPainter {
+  static double offset = 0;
+  static double start = 0;
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('gonna paint');
-    var xAxis = size.height / 2;
-    canvas
-      ..drawRect(Offset.zero & size, Paint()..color = Colors.white)
-      ..translate(currentStart, 0)
-      ..translate(0, xAxis);
-    // canvas.translate(offset, 0);
-    canvas.translate(currentOffset, 0);
-    // currentOffset = offset;
+    canvas //? Color the background, centre x-axis and do x-translation
+      ..drawRect(Offset.zero & size, Paint()..color = Colors.amber)
+      ..translate(0, size.height / 2) //? Vertically centre the x-axis
+      ..translate(start, 0) //? Offset the start (to persist between touches)
+      ..translate(offset, 0); //? immidiate offset for current fingering
 
     ///Add [howMany] number of segments to the tape
     Canvas _addSegments(Canvas cvs, int howMany) {
       Rect tensLine(double xOffset) => Offset(xOffset, -25) & Size(2.56, 50);
+      TextPainter tensText(double xOffset, no) => TextPainter(
+          text: TextSpan(
+              text: no.toString(),
+              style: TextStyle(fontSize: 40, color: Colors.red)),
+          textDirection: TextDirection.ltr)
+        ..layout()
+        ..paint(cvs, Offset(xOffset - 6, 16));
       Rect unitLine(double xOffset) => Offset(xOffset, -10) & Size(1.6, 20);
       var black = Paint()..color = Colors.black;
       //* Draw segments
       for (var no = 0; no < howMany; no++) {
         //* Draw a segment
         cvs.drawRect(tensLine(no * 100), black);
+        tensText(no * 100.0, no);
         for (var i = 1; i < 10; i++) {
           cvs.drawRect(unitLine(i * 10 + no * 100), black);
         }
@@ -56,90 +59,47 @@ class Ticker1 extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(Ticker1 oldDelegate) {
-    return false;
-  }
+  bool shouldRepaint(TapeMeasure oldDelegate) => false;
 
-  static offsetBy(double offset) {
-    print('offsetting by $offset');
-    currentOffset = offset;
-    // currentOffset += offset;
-  }
+  static void offsetBy(double displacement) => offset = displacement;
 
   static void shiftStart() {
-    currentStart = currentOffset + currentStart;
-    currentOffset = 0;
-    print('told to start at $currentStart');
+    start = offset + start;
+    offset = 0;
   }
+
+  static String get string => 'Start position: ${start.toStringAsFixed(1)}'
+      '  offset: ${offset.toStringAsFixed(1)}';
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  String text = 'Go on do it!';
-  String text1 = 'Go on do it!';
-  double offset = 0;
-  double nextTime = 0;
+  String _debugText = 'Go on do it!';
 
-  late Offset initialX;
+  late Offset touchStart;
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text('Hi')),
+        appBar: AppBar(title: Text('Swipe horizontally')),
         body: Center(
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-              Text('You have pushed the button this many times:'),
-              Text('$_counter', style: Theme.of(context).textTheme.headline4),
-              Listener(
-                  behavior: HitTestBehavior.opaque,
-                  onPointerMove: (details) {
-                    var dx = details.localPosition.dx.toStringAsFixed(2);
-                    var dy = details.localPosition.dy.toStringAsFixed(2);
-                    setState(() {
-                      text = 'dx:$dx, dy:$dy';
-                    });
-                  },
-                  child: SizedBox(
-                      height: 200, child: Container(color: Colors.blue))),
-              Text(text),
-              Listener(
-                  //1
-                  behavior: HitTestBehavior.opaque,
-                  onPointerDown: (details) {
-                    initialX = details.localPosition;
-                  },
-                  onPointerMove: (details) {
-                    var poka = details.localPosition.dx - initialX.dx;
-                    setState(() {
-                      Ticker1.offsetBy(poka);
-                      text1 =
-                          'Start: ${Ticker1.currentStart.toStringAsFixed(1)}'
-                          'offset: ${Ticker1.currentOffset.toStringAsFixed(1)}';
-                      // offset = offset + 1;
-                    });
-                  },
-                  onPointerUp: (_) {
-                    // nextTime = T+icker1.zeTick!.offset;
-                    print('current ??' + Ticker1.currentOffset.toString());
-                    setState(() {
-                      Ticker1.shiftStart();
-                      text1 =
-                          'Start: ${Ticker1.currentStart.toStringAsFixed(1)}'
-                          'offset: ${Ticker1.currentOffset.toStringAsFixed(1)}';
-                      // offset = offset + 1;
-                    });
-                  },
-                  child: SizedBox(
-                      height: 150,
-                      child:
-                          CustomPaint(painter: Ticker1(), child: Container()))),
-              Text(text1)
-            ])),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => setState(() => _counter++),
-          tooltip: 'Increment',
-          child: Icon(Icons.add),
-        ), // This trailing comma makes auto-formatting nicer for build methods.
+            child:
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Listener(
+              // behavior: HitTestBehavior.opaque,
+              onPointerDown: (details) => touchStart = details.localPosition,
+              onPointerMove: (details) => setState(() {
+                    TapeMeasure.offsetBy(
+                        details.localPosition.dx - touchStart.dx);
+                    _debugText = TapeMeasure.string;
+                  }),
+              onPointerUp: (_) => setState(() {
+                    TapeMeasure.shiftStart();
+                    _debugText = TapeMeasure.string;
+                  }),
+              child: SizedBox(
+                  height: 150,
+                  child:
+                      CustomPaint(painter: TapeMeasure(), child: Container()))),
+          Text(_debugText)
+        ])),
       );
 }
