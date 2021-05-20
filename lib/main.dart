@@ -32,16 +32,20 @@ class TapeMeasure extends CustomPainter {
 
     ///Add [howMany] number of segments to the tape
     Canvas _addSegments(Canvas cvs, int howMany) {
+      //Draw longer lines for tens
       Rect tensLine(double xOffset) => Offset(xOffset, -25) & Size(2.56, 50);
+      //Label them
       TextPainter tensText(double xOffset, no) => TextPainter(
           text: TextSpan(
               text: no.toString(),
               style: TextStyle(fontSize: 40, color: Colors.red)),
           textDirection: TextDirection.ltr)
         ..layout()
-        ..paint(cvs, Offset(xOffset - 6, 16));
+        ..paint(cvs, Offset(xOffset - 10, 16));
+      // Draw shorter lines for units
       Rect unitLine(double xOffset) => Offset(xOffset, -10) & Size(1.6, 20);
       var black = Paint()..color = Colors.black;
+
       //* Draw segments
       for (var no = 0; no < howMany; no++) {
         //* Draw a segment
