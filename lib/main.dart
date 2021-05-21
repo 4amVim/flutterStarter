@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -87,22 +88,25 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Center(
             child:
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Listener(
-              // behavior: HitTestBehavior.opaque,
-              onPointerDown: (details) => touchStart = details.localPosition,
-              onPointerMove: (details) => setState(() {
-                    TapeMeasure.offsetBy(
-                        details.localPosition.dx - touchStart.dx);
-                    _debugText = TapeMeasure.string;
-                  }),
-              onPointerUp: (_) => setState(() {
-                    TapeMeasure.shiftStart();
-                    _debugText = TapeMeasure.string;
-                  }),
-              child: SizedBox(
-                  height: 150,
-                  child:
-                      CustomPaint(painter: TapeMeasure(), child: Container()))),
+          Transform.rotate(
+            angle: 0, //pi / 2,
+            child: Listener(
+                // behavior: HitTestBehavior.opaque,
+                onPointerDown: (details) => touchStart = details.localPosition,
+                onPointerMove: (details) => setState(() {
+                      TapeMeasure.offsetBy(
+                          details.localPosition.dx - touchStart.dx);
+                      _debugText = TapeMeasure.string;
+                    }),
+                onPointerUp: (_) => setState(() {
+                      TapeMeasure.shiftStart();
+                      _debugText = TapeMeasure.string;
+                    }),
+                child: SizedBox(
+                    height: 150,
+                    child: CustomPaint(
+                        painter: TapeMeasure(), child: Container()))),
+          ),
           Text(_debugText)
         ])),
       );
