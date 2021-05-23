@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -27,31 +26,32 @@ class TapeMeasure extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas //? Color the background, centre x-axis and do x-translation
       ..drawRect(Offset.zero & size, Paint()..color = Colors.amber)
-      ..translate(0, size.height / 2) //? Vertically centre the x-axis
+      // ..translate(0, size.height / 2) //? Vertically centre the x-axis
       ..translate(start, 0) //? Offset the start (to persist between touches)
       ..translate(offset, 0); //? immidiate offset for current fingering
 
     ///Add [howMany] number of segments to the tape
-    Canvas _addSegments(Canvas cvs, int howMany) {
+    Canvas _addSegmentsAbove(Canvas cvs, int howMany, bool showText) {
+      //* Some functions to ease modigying drawing bit
       //Draw longer lines for tens
-      Rect tensLine(double xOffset) => Offset(xOffset, -25) & Size(2.56, 50);
+      Rect tensLine(double xOffset) => Offset(xOffset, 0) & Size(2.56, 50);
       //Label them
-      TextPainter tensText(double xOffset, no) => TextPainter(
+      TextPainter tensText(double xOffset, int no) => TextPainter(
           text: TextSpan(
               text: no.toString(),
               style: TextStyle(fontSize: 40, color: Colors.red)),
           textDirection: TextDirection.ltr)
         ..layout()
-        ..paint(cvs, Offset(xOffset - 10, 16));
+        ..paint(cvs, Offset(xOffset, 50));
       // Draw shorter lines for units
-      Rect unitLine(double xOffset) => Offset(xOffset, -10) & Size(1.6, 20);
+      Rect unitLine(double xOffset) => Offset(xOffset, 0) & Size(1.6, 20);
       var black = Paint()..color = Colors.black;
 
       //* Draw segments
       for (var no = 0; no < howMany; no++) {
         //* Draw a segment
         cvs.drawRect(tensLine(no * 100), black);
-        tensText(no * 100.0, no);
+        if (showText) tensText(no * 100.0, no);
         for (var i = 1; i < 10; i++) {
           cvs.drawRect(unitLine(i * 10 + no * 100), black);
         }
@@ -60,7 +60,17 @@ class TapeMeasure extends CustomPainter {
       return cvs;
     }
 
-    _addSegments(canvas, 9);
+    _addSegmentsAbove(canvas, 9, true);
+    // canvas
+    //   ..translate(0, size.height)
+    //   ..scale(1, -1);
+    Matrix4 poka = Matrix4.translationValues(0, size.height, 0)
+      ..scale(1.0, -1.0, 1.0);
+    // ..skew(123);
+
+    print(poka.toString() + '\n');
+    canvas.transform(poka.storage);
+    _addSegmentsAbove(canvas, 9, false);
   }
 
   @override
