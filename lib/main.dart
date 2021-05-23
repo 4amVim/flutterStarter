@@ -37,17 +37,13 @@ class TapeMeasure extends CustomPainter {
       //Draw longer lines for tens
       Rect tensLine(double xOffset) => Offset(xOffset, 0) & Size(2.56, 50);
       //Label them
-      void tensText(double xOffset, int no) {
-        cvs.rotate(pi / 2);
-        TextPainter(
-            text: TextSpan(
-                text: no.toString(),
-                style: TextStyle(fontSize: 40, color: Colors.red)),
-            textDirection: TextDirection.ltr)
-          ..layout()
-          ..paint(cvs, Offset(xOffset, 50));
-        cvs.rotate(-pi / 2);
-      }
+      void tensText(double xOffset, int no) => TextPainter(
+          text: TextSpan(
+              text: no.toString(),
+              style: TextStyle(fontSize: 40, color: Colors.red)),
+          textDirection: TextDirection.ltr)
+        ..layout()
+        ..paint(cvs, Offset(xOffset, 50));
 
       // Draw shorter lines for units
       Rect unitLine(double xOffset) => Offset(xOffset, 0) & Size(1.6, 20);
@@ -72,15 +68,14 @@ class TapeMeasure extends CustomPainter {
     // canvas
     //   ..translate(0, size.height)
     //   ..scale(1, -1);
-    // Matrix4 poka = Matrix4.translationValues(0, size.height, 0)
-    //   ..scale(1.0, -1.0, 1.0);
-    // ..skew(123);
-    Matrix4 poka = Matrix4.columns(
-            Vector4(1.0, 0.0, 0.0, 0.0),
-            Vector4(.0, 1.0, 0.0, 0.5 * size.height),
-            Vector4(.0, 0.0, 1.0, 0.0),
-            Vector4(.0010, .0, 0.0, 1.0))
-        .transposed();
+    Matrix4 poka = Matrix4.translationValues(0, size.height, 0)
+      ..scale(1.0, -1.0, 1.0);
+    // Matrix4 poka = Matrix4.columns(
+    //         Vector4(1.0, 0.0, 0.0, 0.0),
+    //         Vector4(.0, 1.0, 0.0, 0.5 * size.height),
+    //         Vector4(.0, 0.0, 1.0, 0.0),
+    //         Vector4(.0010, .0, 0.0, 1.0))
+    //     .transposed();
 
     print(poka.toString() + '\n');
     canvas.transform(poka.storage);
