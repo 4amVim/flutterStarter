@@ -36,7 +36,7 @@ class TapeMeasure extends CustomPainter {
       //Draw longer lines for tens
       Rect tensLine(double xOffset) => Offset(xOffset, -25) & Size(2.56, 50);
       //Label them
-      TextPainter tensText(double xOffset, no) => TextPainter(
+      TextPainter tensText(double xOffset, int no) => TextPainter(
           text: TextSpan(
               text: no.toString(),
               style: TextStyle(fontSize: 40, color: Colors.red)),
