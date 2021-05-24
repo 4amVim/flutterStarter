@@ -23,6 +23,8 @@ class TapeMeasure extends CustomPainter {
   static double offset = 0;
   static double start = 0;
 
+  static Duration? looptime;
+
   static late double width;
 
   @override
@@ -80,20 +82,35 @@ class TapeMeasure extends CustomPainter {
     //   ..scale(1, -1);
     // Matrix4 poka = Matrix4.translationValues(0, size.height, 0)
     //   ..scale(1.0, -1.0, 1.0);
-    var startTime = DateTime.now();
-    for (var i = 0; i < 1e4; i++) {
-      Matrix4 poka = Matrix4.columns(
-              Vector4(1.0, 0.0, 0.0, 0.0),
-              Vector4(0.0, -1.0, 0.0, width),
-              Vector4(0.0, 0.0, 1.0, 0.0),
-              Vector4(i.toDouble() /*8e-4*/, 0.0, 0.0, 1.0))
-          .transposed();
+    late Matrix4 poka = Matrix4.identity();
 
-      // print(poka.toString() + '\n');
-      canvas.transform(poka.storage);
-    }
+    ///*Remember that co-ords are [x,y,z,1] to be multiplied from the left
+    var startTime = DateTime.now();
+    print('before loop:\n' + poka.toString() + '\n');
+    // for (var i = 0; i < 1; i++) {
+    poka = Matrix4.columns(
+            Vector4(1.0, 0.0, 0.0, 0.0),
+            Vector4(0.0, -1.0, 0.0, 0.01 * width),
+            Vector4(0.0, 0.0, 1.0, 0.0),
+            Vector4(0.0, -0.003 /* offset / 1000*/ /*8e-4*/, 0.0, 1.0))
+        .transposed();
+    // }
+    print('after loop:\n' + poka.toString() + '\n');
+
+    // canvas.save();
+    canvas.transform(poka.storage);
+
+    looptime = DateTime.now().difference(startTime);
     _addSegmentsAbove(canvas, 9, false);
     // canvas.restore();
+    // poka = Matrix4.columns(
+    //         Vector4(1.0, 0.0, 0.0, 0.0),
+    //         Vector4(0.0, -1.0, 0.0, 1 * width),
+    //         Vector4(0.0, 0.0, 1.0, 0.0),
+    //         Vector4(0.0, -0.003 /* offset / 1000*/ /*8e-4*/, 0.0, 1.0))
+    //     .transposed();
+    // canvas.transform(poka.storage);
+    // _addSegmentsAbove(canvas, 9, false);
   }
 
   @override
@@ -118,17 +135,24 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text('Swipe horizontally')),
-        body: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) => Center(
-              child: Container(
-            color: Colors.blue,
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Tape(width: constraints.maxWidth / 2.5, height: 200),
-                  Text(_debugText)
-                ]),
-          )),
+        body: Center(
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.green,
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) =>
+                  Container(
+                color: Colors.blue,
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Tape(width: constraints.maxWidth / 2.5, height: 200),
+                      Text(_debugText)
+                    ]),
+              ),
+            ),
+          ),
         ),
       );
 
@@ -142,8 +166,12 @@ class _MyHomePageState extends State<MyHomePage> {
           behavior: HitTestBehavior.opaque,
           onPointerDown: (details) => touchStart = details.localPosition,
           onPointerMove: (details) => setState(() {
-                TapeMeasure.offsetBy(details.localPosition.dx - touchStart.dx);
-                _debugText = TapeMeasure.string;
+                TapeMeasure.offsetBy(
+                    (details.localPosition.dx - touchStart.dx));
+                _debugText = TapeMeasure.string +
+                    ' loopTime:' +
+                    (TapeMeasure.looptime?.inMilliseconds.toString() ??
+                        'undefined');
               }),
           onPointerUp: (_) => setState(() {
                 TapeMeasure.shiftStart();
