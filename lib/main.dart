@@ -19,6 +19,63 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+class _MyHomePageState extends State<MyHomePage> {
+  String _debugText = 'Go on do it!';
+
+  late Offset touchStart;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text('Swipe horizontally')),
+        body: Center(
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.green,
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) =>
+                  Container(
+                color: Colors.blue,
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Tape(width: constraints.maxWidth / 3, height: 200),
+                      Text(_debugText)
+                    ]),
+              ),
+            ),
+          ),
+        ),
+      );
+
+  ///
+  Widget Tape({required double width, required double height}) {
+    TapeMeasure.width = width;
+    return Transform.rotate(
+      angle: pi / 2,
+      child: Listener(
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: (details) => touchStart = details.localPosition,
+          onPointerMove: (details) => setState(() {
+                TapeMeasure.offsetBy(
+                    (details.localPosition.dx - touchStart.dx));
+                _debugText = TapeMeasure.string +
+                    ' loopTime:' +
+                    (TapeMeasure.looptime?.inMilliseconds.toString() ??
+                        'undefined');
+              }),
+          onPointerUp: (_) => setState(() {
+                TapeMeasure.shiftStart();
+                _debugText = TapeMeasure.string;
+              }),
+          child: Container(
+              height: width,
+              width: height,
+              child: CustomPaint(painter: TapeMeasure()))),
+    );
+  }
+}
+
 class TapeMeasure extends CustomPainter {
   static double offset = 0;
   static double start = 0;
@@ -48,13 +105,14 @@ class TapeMeasure extends CustomPainter {
       void tensText(double xOffset, int no) => TextPainter(
           text: TextSpan(
               text: no.toString(),
-              style: TextStyle(fontSize: 40, color: Colors.red)),
+              style: TextStyle(fontSize: width * 0.5, color: Colors.red)),
           textDirection: TextDirection.ltr)
-        ..layout()
-        ..paint(cvs, Offset(-0.6 * width, xOffset - 125));
+        ..layout(minWidth: width * 0.2, maxWidth: width * 0.8)
+        ..paint(cvs, Offset(-0.65 * width, xOffset - 0.35 * width));
 
       // Draw shorter lines for units
-      Rect unitLine(double xOffset) => Offset(xOffset, 0) & Size(1.6, 20);
+      Rect unitLine(double xOffset) =>
+          Offset(xOffset, 0) & Size(1.6, 0.15 * width);
       var black = Paint()..color = Colors.black;
 
       //* Draw segments
@@ -77,40 +135,16 @@ class TapeMeasure extends CustomPainter {
     }
 
     _addSegmentsAbove(canvas, 9, true);
-    // canvas
-    //   ..translate(0, size.height)
-    //   ..scale(1, -1);
-    // Matrix4 poka = Matrix4.translationValues(0, size.height, 0)
-    //   ..scale(1.0, -1.0, 1.0);
-    late Matrix4 poka = Matrix4.identity();
 
     ///*Remember that co-ords are [x,y,z,1] to be multiplied from the left
     var startTime = DateTime.now();
-    print('before loop:\n' + poka.toString() + '\n');
-    // for (var i = 0; i < 1; i++) {
-    poka = Matrix4.columns(
-            Vector4(1.0, 0.0, 0.0, 0.0),
-            Vector4(0.0, -1.0, 0.0, 0.01 * width),
-            Vector4(0.0, 0.0, 1.0, 0.0),
-            Vector4(0.0, -0.003 /* offset / 1000*/ /*8e-4*/, 0.0, 1.0))
-        .transposed();
-    // }
-    print('after loop:\n' + poka.toString() + '\n');
 
-    // canvas.save();
+    Matrix4 poka = Matrix4.translationValues(0, size.height, 0)
+      ..scale(1.0, -1.0, 1.0);
     canvas.transform(poka.storage);
 
     looptime = DateTime.now().difference(startTime);
     _addSegmentsAbove(canvas, 9, false);
-    // canvas.restore();
-    // poka = Matrix4.columns(
-    //         Vector4(1.0, 0.0, 0.0, 0.0),
-    //         Vector4(0.0, -1.0, 0.0, 1 * width),
-    //         Vector4(0.0, 0.0, 1.0, 0.0),
-    //         Vector4(0.0, -0.003 /* offset / 1000*/ /*8e-4*/, 0.0, 1.0))
-    //     .transposed();
-    // canvas.transform(poka.storage);
-    // _addSegmentsAbove(canvas, 9, false);
   }
 
   @override
@@ -125,62 +159,4 @@ class TapeMeasure extends CustomPainter {
 
   static String get string => 'Start position: ${start.toStringAsFixed(1)}'
       '  offset: ${offset.toStringAsFixed(1)}';
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  String _debugText = 'Go on do it!';
-
-  late Offset touchStart;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text('Swipe horizontally')),
-        body: Center(
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.green,
-            child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) =>
-                  Container(
-                color: Colors.blue,
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Tape(width: constraints.maxWidth / 2.5, height: 200),
-                      Text(_debugText)
-                    ]),
-              ),
-            ),
-          ),
-        ),
-      );
-
-  ///
-  Widget Tape({required double width, required double height}) {
-    print('width->>> $width');
-    TapeMeasure.width = width;
-    return Transform.rotate(
-      angle: pi / 2,
-      child: Listener(
-          behavior: HitTestBehavior.opaque,
-          onPointerDown: (details) => touchStart = details.localPosition,
-          onPointerMove: (details) => setState(() {
-                TapeMeasure.offsetBy(
-                    (details.localPosition.dx - touchStart.dx));
-                _debugText = TapeMeasure.string +
-                    ' loopTime:' +
-                    (TapeMeasure.looptime?.inMilliseconds.toString() ??
-                        'undefined');
-              }),
-          onPointerUp: (_) => setState(() {
-                TapeMeasure.shiftStart();
-                _debugText = TapeMeasure.string;
-              }),
-          child: Container(
-              height: width,
-              width: height,
-              child: CustomPaint(painter: TapeMeasure()))),
-    );
-  }
 }
