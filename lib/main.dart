@@ -20,7 +20,6 @@ class OnboardingPage extends StatefulWidget {
 
 class _OnboardingPageState extends State<OnboardingPage> {
   String _debugText = 'Go on do it!';
-
   late Offset touchStart;
 
   @override
@@ -30,7 +29,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
           child: Container(
               width: double.infinity,
               height: double.infinity,
-              color: Colors.green,
               child: LayoutBuilder(
                   builder: (BuildContext context, BoxConstraints constraints) =>
                       ColoredBox(
@@ -93,16 +91,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
           )));
 }
 
+///Draws a vertical tape measure that gives a measurment [reading]
 class TapeMeasurePaint extends CustomPainter {
+  ///
   static double offset = 0;
   static double start = -14600;
+
   static double? get reading {
     double read = (-start - offset + 253.7) / (100 * unitHigh);
     return read > 1000 ? null : read;
   }
 
-  static double unitHigh = 0;
-
+  static late double unitHigh;
   static Duration? looptime;
 
   @override
