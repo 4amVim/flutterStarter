@@ -52,17 +52,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                     style: TextStyle(fontSize: 45))),
                             Positioned(
                                 left: constraints.maxWidth / 3,
-                                top: constraints.maxHeight / 4,
+                                top: constraints.maxHeight / 8,
                                 right: 0,
 
                                 // alignment: AlignmentDirectional(
                                 //     constraints.maxWidth / 3, 50),
                                 child: Text(
-                                    TapeMeasurePaint.reading
-                                            ?.toStringAsFixed(2) ??
-                                        'Scroll on the yellow tape to set height',
+                                    'readin =' +
+                                        TapeMeasurePaint.readin
+                                            .toStringAsFixed(5),
                                     softWrap: true,
-                                    style: TextStyle(fontSize: 45))),
+                                    style: TextStyle(fontSize: 20))),
                           ]))))));
 
   ///
@@ -72,21 +72,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
       onPointerMove: (details) => setState(() {
             TapeMeasurePaint.offsetBy(
                 (details.localPosition.dy - touchStart.dy));
-            _debugText = TapeMeasurePaint.string +
-                ' loopTime:' +
-                (TapeMeasurePaint.looptime?.inMilliseconds.toString() ??
-                    'undefined');
+            _debugText = TapeMeasurePaint.readin.toString();
           }),
       onPointerUp: (_) => setState(() {
             TapeMeasurePaint.shiftStart();
-            _debugText = TapeMeasurePaint.string;
+            _debugText = TapeMeasurePaint.reading;
           }),
       child: Container(
           height: height,
           // width: width,
           // color: Colors.black,
           child: CustomPaint(
-            painter: TapeMeasurePaint(),
+            painter: TapeMeasurePaint(width, height),
             child: Container(width: width),
           )));
 }
@@ -94,34 +91,38 @@ class _OnboardingPageState extends State<OnboardingPage> {
 ///Draws a vertical tape measure that gives a measurment [reading]
 class TapeMeasurePaint extends CustomPainter {
   ///
-  static double offset = 0;
-  static double start = -14600;
+  double get _offset =>
+      offset / _unit; //(offset * 10000 / _unit).floorToDouble() / 10000;
+  double get _start =>
+      start / _unit; //(start * 10000 / _unit).floorToDouble() / 10000;
 
-  static double? get reading {
-    double read = (-start - offset + 253.7) / (100 * unitHigh);
-    return read > 1000 ? null : read;
+  double height;
+  double width;
+  TapeMeasurePaint(this.width, this.height,
+      {double tens = 1, double ones = 2, double gap = 7, int howMany = 5})
+      : _unit = (height) / (((ones + 9 * tens + 10 * gap)) * howMany) {
+    _tenthSize = tens * _unit;
+    _oneSize = ones * _unit;
+    _gapSize = gap * _unit;
   }
+  //? 2 for tens, 1 for each unit and 7 for each of the 10 spaces
 
-  static late double unitHigh;
-  static Duration? looptime;
+  late final double _unit;
+
+  late final double _tenthSize;
+  late final double _oneSize;
+  late final double _gapSize;
+
+  static double readin = 0;
 
   @override
   void paint(Canvas canvas, Size size) {
-    var arrowPath = Path()
-      ..addRect(Offset(size.width / 2, size.height / 3) &
-          Size(size.width, size.height / 80))
-      ..lineTo(size.width / 2, -20 + size.height / 3) //?Line up
-      ..lineTo(-30 + size.width / 2, (163 * size.height / 480))
-      ..lineTo(size.width / 2, 20 + (83 * size.height / 240));
-
     canvas //? Color the background, centre x-axis and do x-translation
       ..drawRect(Offset.zero & size, Paint()..color = Colors.amber)
-      ..save()
+      ..save() //? We're saving basic state for later when we draw an arrow
       ..translate(size.width, .0) //? Vertically centre the x-axis
-      ..translate(0, start) //? Offset the start (to persist between touches)
-      ..translate(0, offset) //? immidiate offset for current fingering
-      // canvas
-      // ..save()
+      ..translate(0, _start) //? Offset the start (to persist between touches)
+      ..translate(0, _offset) //? immidiate offset for current fingering
       ..rotate(pi / 2); //* remember that hereon the axes are switched
 
     ///Add [howMany] number of segments to the tape
@@ -129,10 +130,6 @@ class TapeMeasurePaint extends CustomPainter {
       //* Some functions to ease modigying drawing bit
       //Draw longer lines for tens
 
-      unitHigh = size.height / 511;
-
-      Rect tensLine(double xOffset) =>
-          Offset(xOffset, 0) & Size(2 * unitHigh, 0.35 * size.width);
       //Label them
       double fontSize = 40; //size.width*0.2>
       void tensText(double xOffset, int no) => TextPainter(
@@ -144,52 +141,61 @@ class TapeMeasurePaint extends CustomPainter {
         ..paint(cvs, Offset(-0.65 * size.width, xOffset - 0.04 * size.width));
       print(size.width * 0.2);
 
-      // Draw shorter lines for units
-      Rect unitLine(double xOffset) =>
-          Offset(xOffset, 0) & Size(unitHigh, 0.15 * size.width);
-      var black = Paint()..color = Colors.black;
-
       //* Draw segments
+      cvs.save();
       for (var no = 0; no < howMany; no++) {
+        var black = Paint()..color = Colors.black;
         //* Draw a segment
-        cvs.drawRect(tensLine(no * 100 * unitHigh), black);
+        cvs.drawRect(Offset.zero & Size(_oneSize, 0.35 * size.width), black);
+        cvs.translate(_oneSize, 0);
         if (showText) {
-          // cvs.save();
           cvs.rotate(-pi / 2);
-          tensText(no * 100 * unitHigh, no);
+          tensText(0, no);
           cvs.rotate(pi / 2);
-          // cvs.restore();
         }
-        for (var i = 1; i < 10; i++) {
-          cvs.drawRect(unitLine((i * 10 + no * 100) * unitHigh), black);
+        for (var i = 1; i <= 9; i++) {
+          cvs.drawRect(
+              Offset(i * _gapSize + (i - 1) * _tenthSize, 0) &
+                  Size(_tenthSize, .15 * size.width),
+              black);
         }
+        cvs.translate(10 * _gapSize + 9 * _tenthSize, 0);
       }
-      return cvs;
+      return cvs..restore();
     }
 
     _addSegmentsAbove(canvas, 250, true);
-
-    ///*Remember that co-ords are [x,y,z,1] to be multiplied from the left
-    var startTime = DateTime.now();
 
     Matrix4 poka = Matrix4.translationValues(0, size.width, 0)
       ..scale(1.0, -1.0, 1.0);
     canvas.transform(poka.storage);
 
-    looptime = DateTime.now().difference(startTime);
     _addSegmentsAbove(canvas, 250, false);
 
+    var arrowPath = Path()
+      ..addRect(Offset(size.width / 2, size.height / 3) &
+          Size(size.width, size.height / 80))
+      ..lineTo(size.width / 2, -20 + size.height / 3) //?Line up
+      ..lineTo(-30 + size.width / 2, (163 * size.height / 480))
+      ..lineTo(size.width / 2, 20 + (83 * size.height / 240));
     canvas
       ..restore()
       ..translate(-30, 0)
       ..drawPath(arrowPath, Paint()..color = Colors.white)
       ..translate(30, 0);
+    readin = (_offset + _start) / _unit;
+    reading = (((_offset + _start) / _unit) / (-80.5)).toString();
   }
+
+  static String reading = 'Oh no';
 
   @override
   bool shouldRepaint(TapeMeasurePaint oldDelegate) => false;
 
   static void offsetBy(double displacement) => offset = displacement;
+  static double offset = 0;
+  static double start =
+      -27580; //-27800 is 101 and -27520 is 100 AND -30~a tenth;
 
   static void shiftStart() {
     start = offset + start;
