@@ -76,7 +76,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           }),
       onPointerUp: (_) => setState(() {
             TapeMeasurePaint.shiftStart();
-            _debugText = TapeMeasurePaint.reading;
+            _debugText = TapeMeasurePaint.readPls.toString();
           }),
       child: Container(
           height: height,
@@ -93,8 +93,10 @@ class TapeMeasurePaint extends CustomPainter {
   ///
   double get _offset =>
       offset / _unit; //(offset * 10000 / _unit).floorToDouble() / 10000;
-  double get _start =>
-      start / _unit; //(start * 10000 / _unit).floorToDouble() / 10000;
+  double get _start {
+    if (start == 0) start = -7963 * _unit * _unit;
+    return start / _unit;
+  } //(start * 10000 / _unit).floorToDouble() / 10000;
 
   double height;
   double width;
@@ -108,6 +110,7 @@ class TapeMeasurePaint extends CustomPainter {
   //? 2 for tens, 1 for each unit and 7 for each of the 10 spaces
 
   late final double _unit;
+  static double unit = 0;
 
   late final double _tenthSize;
   late final double _oneSize;
@@ -183,19 +186,24 @@ class TapeMeasurePaint extends CustomPainter {
       ..translate(-30, 0)
       ..drawPath(arrowPath, Paint()..color = Colors.white)
       ..translate(30, 0);
+
+    ///Update Reading
     readin = (_offset + _start) / _unit;
-    reading = (((_offset + _start) / _unit) / (-80.5)).toString();
+    print('_offset    ->' + _offset.toString());
+    print('_start    ->' + _start.toString());
+    print('reading    ->' + readin.toString());
   }
 
-  static String reading = 'Oh no';
+  String get reading => ((_offset + _start) / _unit).toStringAsFixed(0);
+  static double get readPls => (start + offset) / unit;
 
   @override
   bool shouldRepaint(TapeMeasurePaint oldDelegate) => false;
 
   static void offsetBy(double displacement) => offset = displacement;
   static double offset = 0;
-  static double start =
-      -27580; //-27800 is 101 and -27520 is 100 AND -30~a tenth;
+  static double start = 0;
+  // -27580; //-27800 is 101 and -27520 is 100 AND -30~a tenth;
 
   static void shiftStart() {
     start = offset + start;
