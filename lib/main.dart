@@ -27,7 +27,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(title: Text('Swipe vertically')),
       body: Center(
-          child: Container(
+          child: SizedBox(
               width: double.infinity,
               height: double.infinity,
               child: LayoutBuilder(
@@ -59,10 +59,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               tape!.offsetBy((details.localPosition.dy - touchStart.dy));
               _debugText = tape!.reading;
             }),
-        onPointerUp: (_) => setState(() {
-              tape!.shiftStart();
-              _debugText = ((tape!.rawReading) / -80).toString();
-            }),
+        onPointerUp: (_) => setState(() => tape!.shiftStart()),
         child: CustomPaint(
           painter: tape,
           child: Container(width: width),

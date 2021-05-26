@@ -1,25 +1,34 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 ///Draws a vertical tape measure that gives a measurment [rawReading]
 class TapeMeasurePaint extends CustomPainter {
-  double _rawOffset = 0;
+  ///Instantaneous, scaled offset of the tape
+  double _offset = 0;
+
+  ///Instantaneous, unscaled persistent offset of the tape
   double _rawStart = 0;
-  String get string => 'Start position: ${_rawStart.toStringAsFixed(1)}'
-      '  offset: ${_rawOffset.toStringAsFixed(1)}';
   //? 2 for tens, 1 for each unit and 7 for each of the 10 spaces
 
-  final double height;
+  ///Height of the canvas
   final double width;
 
+  ///This is the unit height, we paint everything based on this
   late final double _unit;
+
+  ///size for the marking of one-tenth size
   late final double _tenthSize;
+
+  ///size for the marking of one size
   late final double _oneSize;
 
+  ///size for the gap between any two markings
   late final double _gapSize;
 
-  TapeMeasurePaint(this.width, this.height,
+  ///Create a vertically scrollable TapeMeasure with the given [width],[height]
+  ///and optionally, the relative thickness of the tenth's marking [tens],
+  ///one's marking [one], gap size [gap] and [howMany] units to display at once
+  TapeMeasurePaint(this.width, double height,
       {double tens = 1, double ones = 2, double gap = 7, int howMany = 5})
       : _unit = (height) / (((ones + 9 * tens + 10 * gap)) * howMany) {
     _tenthSize = tens * _unit;
@@ -27,11 +36,13 @@ class TapeMeasurePaint extends CustomPainter {
     _gapSize = gap * _unit;
   }
 
+  ///Raw reading, basically for internal use only
   double get rawReading => (_offset + _start) / _unit;
+
+  ///gets current reading of the tape measure
   String get reading => (((rawReading) / -81) + 1.7).toStringAsFixed(1);
 
-  ///
-  double get _offset => _rawOffset / _unit;
+  // double get _offset => _rawOffset / _unit;
 
   double get _start {
     if (_rawStart == 0) _rawStart = -7963 * _unit * _unit;
@@ -103,19 +114,24 @@ class TapeMeasurePaint extends CustomPainter {
       ..lineTo(size.width / 2, 20 + (83 * size.height / 240));
     canvas
       ..restore()
-      ..translate(-30, 0)
-      ..drawPath(arrowPath, Paint()..color = Colors.white)
-      ..translate(30, 0);
+      ..save()
+      //?If user is scrolling, have the arrow slightly more to the right
+      ..translate(_offset == 0 ? -30 : -10, 0)
+      //?If user is scrolling, have the arrow slightly more opaque
+      ..drawPath(arrowPath,
+          Paint()..color = _offset == 0 ? Color(0xCFFFFFFF) : Color(0xFFFFFFFF))
+      ..restore();
   }
 
   @override
   bool shouldRepaint(TapeMeasurePaint oldDelegate) => false;
-  // -27580; //-27800 is 101 and -27520 is 100 AND -30~a tenth;
 
-  void offsetBy(double displacement) => _rawOffset = displacement;
+  ///Move the tape up/down ephemerally
+  void offsetBy(double displacement) => _offset = displacement / _unit;
 
+  ///Move the tape up/down persistent-ly
   void shiftStart() {
-    _rawStart = _rawOffset + _rawStart;
-    _rawOffset = 0;
+    _rawStart = _offset * _unit + _rawStart;
+    _offset = 0;
   }
 }
