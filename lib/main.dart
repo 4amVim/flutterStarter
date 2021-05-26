@@ -45,25 +45,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                 left: constraints.maxWidth / 3,
                                 top: constraints.maxHeight / 2,
                                 right: 0,
-
-                                // alignment: AlignmentDirectional(
-                                //     constraints.maxWidth / 3, 50),
                                 child: Text(_debugText,
                                     softWrap: true,
                                     style: TextStyle(fontSize: 45))),
-                            Positioned(
-                                left: constraints.maxWidth / 3,
-                                top: constraints.maxHeight / 8,
-                                right: 0,
-
-                                // alignment: AlignmentDirectional(
-                                //     constraints.maxWidth / 3, 50),
-                                child: Text(
-                                    'readin =' +
-                                        TapeMeasurePaint.readin
-                                            .toStringAsFixed(5),
-                                    softWrap: true,
-                                    style: TextStyle(fontSize: 20))),
                           ]))))));
 
   Widget Tape({required double width, required double height}) {
@@ -72,16 +56,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
         behavior: HitTestBehavior.opaque,
         onPointerDown: (details) => touchStart = details.localPosition,
         onPointerMove: (details) => setState(() {
-              TapeMeasurePaint.offsetBy(
-                  (details.localPosition.dy - touchStart.dy));
-              _debugText = (((tape!.reading) / -81)+1.7).toStringAsFixed(1);
+              tape!.offsetBy((details.localPosition.dy - touchStart.dy));
+              _debugText = tape!.reading;
             }),
         onPointerUp: (_) => setState(() {
-              TapeMeasurePaint.shiftStart();
-              _debugText = ((tape!.reading) / -80).toString();
+              tape!.shiftStart();
+              _debugText = ((tape!.rawReading) / -80).toString();
             }),
         child: CustomPaint(
-          painter: tape, //TapeMeasurePaint(width, height),
+          painter: tape,
           child: Container(width: width),
         ));
   }

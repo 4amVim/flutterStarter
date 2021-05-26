@@ -1,19 +1,24 @@
-
-import 'package:flutter/material.dart';
 import 'dart:math';
 
-///Draws a vertical tape measure that gives a measurment [reading]
-class TapeMeasurePaint extends CustomPainter {
-  ///
-  double get _offset =>
-      offset / _unit; //(offset * 10000 / _unit).floorToDouble() / 10000;
-  double get _start {
-    if (start == 0) start = -7963 * _unit * _unit;
-    return start / _unit;
-  } //(start * 10000 / _unit).floorToDouble() / 10000;
+import 'package:flutter/material.dart';
 
-  double height;
-  double width;
+///Draws a vertical tape measure that gives a measurment [rawReading]
+class TapeMeasurePaint extends CustomPainter {
+  double _rawOffset = 0;
+  double _rawStart = 0;
+  String get string => 'Start position: ${_rawStart.toStringAsFixed(1)}'
+      '  offset: ${_rawOffset.toStringAsFixed(1)}';
+  //? 2 for tens, 1 for each unit and 7 for each of the 10 spaces
+
+  final double height;
+  final double width;
+
+  late final double _unit;
+  late final double _tenthSize;
+  late final double _oneSize;
+
+  late final double _gapSize;
+
   TapeMeasurePaint(this.width, this.height,
       {double tens = 1, double ones = 2, double gap = 7, int howMany = 5})
       : _unit = (height) / (((ones + 9 * tens + 10 * gap)) * howMany) {
@@ -21,16 +26,17 @@ class TapeMeasurePaint extends CustomPainter {
     _oneSize = ones * _unit;
     _gapSize = gap * _unit;
   }
-  //? 2 for tens, 1 for each unit and 7 for each of the 10 spaces
 
-  late final double _unit;
-  static double unit = 0;
+  double get rawReading => (_offset + _start) / _unit;
+  String get reading => (((rawReading) / -81) + 1.7).toStringAsFixed(1);
 
-  late final double _tenthSize;
-  late final double _oneSize;
-  late final double _gapSize;
+  ///
+  double get _offset => _rawOffset / _unit;
 
-  static double readin = 0;
+  double get _start {
+    if (_rawStart == 0) _rawStart = -7963 * _unit * _unit;
+    return _rawStart / _unit;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -100,29 +106,16 @@ class TapeMeasurePaint extends CustomPainter {
       ..translate(-30, 0)
       ..drawPath(arrowPath, Paint()..color = Colors.white)
       ..translate(30, 0);
-
-    ///Update Reading
-    readin = (_offset + _start) / _unit;
-    print('_offset    ->' + _offset.toString());
-    print('_start    ->' + _start.toString());
-    print('reading    ->' + readin.toString());
   }
-
-  double get reading => (_offset + _start) / _unit;
 
   @override
   bool shouldRepaint(TapeMeasurePaint oldDelegate) => false;
-
-  static void offsetBy(double displacement) => offset = displacement;
-  static double offset = 0;
-  static double start = 0;
   // -27580; //-27800 is 101 and -27520 is 100 AND -30~a tenth;
 
-  static void shiftStart() {
-    start = offset + start;
-    offset = 0;
-  }
+  void offsetBy(double displacement) => _rawOffset = displacement;
 
-  static String get string => 'Start position: ${start.toStringAsFixed(1)}'
-      '  offset: ${offset.toStringAsFixed(1)}';
+  void shiftStart() {
+    _rawStart = _rawOffset + _rawStart;
+    _rawOffset = 0;
+  }
 }
